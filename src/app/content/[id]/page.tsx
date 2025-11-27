@@ -39,7 +39,7 @@ export default async function ContentPage({ params }: { params: { id: string } }
 
                     <div className="rounded-xl overflow-hidden shadow-2xl glassmorphism border-2 border-primary/20">
                         {content.type === "VIDEO" ? (
-                            <VideoPlayer url={content.url} userEmail={userEmail} />
+                            <VideoPlayer url={content.url} userEmail={userEmail} contentId={content.id} />
                         ) : (
                             <iframe src={content.url} className="w-full h-[600px]" />
                         )}

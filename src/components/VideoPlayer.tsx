@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { rewardForWatch } from "@/lib/actions";
 
 interface VideoPlayerProps {
     url: string;
     userEmail: string;
+    contentId: string;
 }
 
-export function VideoPlayer({ url, userEmail }: VideoPlayerProps) {
+export function VideoPlayer({ url, userEmail, contentId }: VideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [position, setPosition] = useState({ x: 10, y: 10 });
+    const [rewarded, setRewarded] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -23,11 +26,29 @@ export function VideoPlayer({ url, userEmail }: VideoPlayerProps) {
         const videoEl = videoRef.current;
         if(videoEl) videoEl.addEventListener('contextmenu', handleContextMenu);
 
+        // Progress Tracking
+        const handleTimeUpdate = () => {
+            if (!videoEl || rewarded) return;
+            const progress = (videoEl.currentTime / videoEl.duration) * 100;
+            if (progress >= 95) {
+                setRewarded(true);
+                rewardForWatch(contentId).then((res) => {
+                    if (res.success) {
+                        alert("🎉 +10 Coins! You've completed this video.");
+                    }
+                });
+            }
+        };
+        if(videoEl) videoEl.addEventListener('timeupdate', handleTimeUpdate);
+
         return () => {
             clearInterval(interval);
-            if(videoEl) videoEl.removeEventListener('contextmenu', handleContextMenu);
+            if(videoEl) {
+                videoEl.removeEventListener('contextmenu', handleContextMenu);
+                videoEl.removeEventListener('timeupdate', handleTimeUpdate);
+            }
         };
-    }, []);
+    }, [rewarded, contentId]);
 
     return (
         <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden group">

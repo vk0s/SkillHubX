@@ -5,15 +5,19 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Upload, Bot, Shield, ShieldAlert } from "lucide-react";
 
-export function Sidebar() {
+interface SidebarProps {
+    role?: string;
+}
+
+export function Sidebar({ role }: SidebarProps) {
     const pathname = usePathname();
 
     const items = [
-        { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-        { href: "/upload", icon: Upload, label: "Upload Content" },
-        { href: "/ai-helper", icon: Bot, label: "AI Helper" },
-        { href: "/admin", icon: Shield, label: "Admin Panel" },
-        { href: "/super-admin", icon: ShieldAlert, label: "Super Admin" },
+        { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", visible: true },
+        { href: "/upload", icon: Upload, label: "Upload Content", visible: true },
+        { href: "/ai-helper", icon: Bot, label: "AI Helper", visible: true },
+        { href: "/admin", icon: Shield, label: "Admin Panel", visible: role === "ADMIN" || role === "SUPERADMIN" },
+        { href: "/super-admin", icon: ShieldAlert, label: "Super Admin", visible: role === "SUPERADMIN" },
     ];
 
     return (
@@ -21,7 +25,7 @@ export function Sidebar() {
             <div className="space-y-4 py-4">
                 <div className="px-3 py-2">
                     <div className="space-y-1">
-                        {items.map((item) => (
+                        {items.filter(item => item.visible).map((item) => (
                             <Link
                                 key={item.href}
                                 href={item.href}

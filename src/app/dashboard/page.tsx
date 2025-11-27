@@ -2,10 +2,10 @@ import { db } from "@/lib/db";
 import { Sidebar } from "@/components/Sidebar";
 import Link from "next/link";
 import { FileText, PlayCircle } from "lucide-react";
+import { getSelf } from "@/lib/auth";
 
 export default async function DashboardPage() {
-    // In production we would protect this route and filter by user role/permissions
-    // For now, we list all APPROVED content
+    const user = await getSelf();
     const contents = await db.content.findMany({
         where: { status: "APPROVED" },
         include: { uploader: true }
@@ -13,7 +13,7 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex min-h-[calc(100vh-3.5rem)]">
-            <Sidebar />
+            <Sidebar role={user?.role} />
             <div className="flex-1 lg:pl-64">
                 <div className="container py-8">
                     <h1 className="text-3xl font-bold mb-8">Dashboard</h1>

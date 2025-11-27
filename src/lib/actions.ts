@@ -103,3 +103,71 @@ export async function generateStudyMaterial(topic: string) {
 
     return aiData;
 }
+
+// Reward System
+export async function rewardForWatch(contentId: string) {
+    const { userId } = auth();
+    if (!userId) return { success: false, message: "Unauthorized" };
+
+    const user = await db.user.findUnique({ where: { clerkId: userId } });
+    if (!user) return { success: false, message: "User not found" };
+
+    const REWARD_AMOUNT = 10;
+    const message = `Watched content ${contentId}`;
+
+    // Check existing transaction for this content
+    const existing = await db.transaction.findFirst({
+        where: {
+            userId: user.id,
+            type: "EARN",
+            message: message
+        }
+    });
+
+    if (existing) return { success: false, message: "Already rewarded" };
+
+    await db.$transaction([
+        db.user.update({
+            where: { id: user.id },
+            data: { walletBalance: { increment: REWARD_AMOUNT } }
+        }),
+        db.transaction.create({
+            data: {
+                userId: user.id,
+                amount: REWARD_AMOUNT,
+                type: "EARN",
+                message: message
+            }
+        })
+    ]);
+
+    revalidatePath("/dashboard");
+    return { success: true, message: "Coins earned!" };
+}
+
+// Super Admin Actions
+export async function promoteToAdmin(targetId: string) {
+    const { userId } = auth();
+    if (!userId) return;
+    const user = await db.user.findUnique({ where: { clerkId: userId } });
+    if (user?.role !== "SUPERADMIN") throw new Error("Unauthorized");
+
+    await db.user.update({
+        where: { id: targetId },
+        data: { role: "ADMIN" }
+    });
+    revalidatePath("/super-admin");
+}
+
+export async function demoteToUser(targetId: string) {
+    const { userId } = auth();
+    if (!userId) return;
+    const user = await db.user.findUnique({ where: { clerkId: userId } });
+    if (user?.role !== "SUPERADMIN") throw new Error("Unauthorized");
+
+    await db.user.update({
+        where: { id: targetId },
+        data: { role: "USER" }
+    });
+    revalidatePath("/super-admin");
+}

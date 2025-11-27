@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId       String    @unique
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId       String        @unique
   name          String?
   email         String
-  role          Role      @default(USER)
-  walletBalance Int       @default(0)
+  role          Role          @default(USER)
+  walletBalance Int           @default(0)
   uploads       Content[]
   quizzes       Quiz[]
+  transactions  Transaction[]
 }
 
 model Content {
@@ -41,6 +42,16 @@ model Quiz {
   createdAt          DateTime @default(now())
 }
 
+model Transaction {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Int
+  type      TransactionType
+  message   String
+  createdAt DateTime @default(now())
+}
+
 enum Role {
   USER
   ADMIN
@@ -62,4 +73,9 @@ enum InputType {
   PDF
   IMAGE
   TEXT
+}
+
+enum TransactionType {
+  EARN
+  SPEND
 }
