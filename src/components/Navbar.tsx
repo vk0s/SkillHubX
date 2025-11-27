@@ -11,13 +11,18 @@ export default function Navbar() {
   const { userId } = useAuth();
   const pathname = usePathname();
   const [balance, setBalance] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Poll for balance or fetch on mount
   useEffect(() => {
       if (userId) {
           getUserBalance().then(setBalance);
       }
-  }, [userId, pathname]); // Refresh on navigation (e.g. after earning)
+  }, [userId, pathname]);
 
   const navItems = [
     { label: "Home", href: "/home" },
@@ -26,12 +31,8 @@ export default function Navbar() {
     { label: "AI Helper", href: "/ai-helper" },
   ];
 
-  const role = user?.publicMetadata?.role as string || "USER";
-  // Note: For real security we check DB, but for UI hiding we can use metadata if synced.
-  // Since we don't have webhook syncing metadata in this mock, we might need to fetch role from server action or use generic links that redirect.
-  // We'll optimistically show Admin if the user has specific email or if we fetched it.
-  // For this demo, let's just show links if they are logged in and let page protection handle access.
-  // Actually, let's fetch role via server action wrapper if we want to be precise, but standard is checking session claims.
+  // Prevent hydration mismatch for auth state
+  if (!mounted) return null; // Or a skeleton
 
   return (
     <nav className="fixed top-0 w-full z-50 glassmorphism px-6 py-4 flex justify-between items-center border-b border-white/10">
