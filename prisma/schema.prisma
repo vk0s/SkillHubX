@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId       String         @unique
+  email         String
+  role          UserRole       @default(USER)
+  walletBalance Int            @default(0)
+  uploads       Content[]
+  transactions  Transaction[]
+  adminProfile  Admin?
+  superAdminProfile SuperAdmin?
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+model Content {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  type        ContentType
+  url         String
+  price       Int
+  uploaderId  String        @db.ObjectId
+  uploader    User          @relation(fields: [uploaderId], references: [id])
+  status      ContentStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+}
+
+enum ContentType {
+  VIDEO
+  PDF
+}
+
+enum ContentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Transaction {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String          @db.ObjectId
+  user      User            @relation(fields: [userId], references: [id])
+  amount    Int
+  type      TransactionType
+  message   String
+  createdAt DateTime        @default(now())
+}
+
+enum TransactionType {
+  EARN
+  SPEND
+}
+
+model Admin {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @unique @db.ObjectId
+  user              User    @relation(fields: [userId], references: [id])
+  canApproveContent Boolean @default(true)
+}
+
+model SuperAdmin {
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String  @unique @db.ObjectId
+  user            User    @relation(fields: [userId], references: [id])
+  canManageAdmins Boolean @default(true)
+}
