@@ -6,7 +6,14 @@ module.exports = {
     "./src/lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        neon: {
+           blue: '#06b6d4',
+           purple: '#8b5cf6',
+        }
+      }
+    },
   },
   plugins: [],
 }

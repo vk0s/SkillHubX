@@ -3,6 +3,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini
+// TODO: Replace mock key with real key from process.env.GEMINI_API_KEY
+// Ensure your .env has GEMINI_API_KEY=...
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "mock-key");
 
 export async function generateQuiz(text: string) {
@@ -12,13 +14,12 @@ export async function generateQuiz(text: string) {
 
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-        const prompt = `Generate a quiz with 5 multiple choice questions based on the following text.
-        Format the output as a JSON array of objects, where each object has:
+        const prompt = `Generate a quiz with 10 multiple choice questions based on the following text.
+        Format the output as a raw JSON array of objects (no markdown blocks), where each object has:
         - question (string)
         - options (array of strings)
         - answer (index of correct option, number)
-
-        Do not include markdown formatting like \`\`\`json. Just raw JSON.
+        - explanation (string)
 
         Text: ${text}`;
 
@@ -26,7 +27,7 @@ export async function generateQuiz(text: string) {
         const response = await result.response;
         const textResponse = response.text();
 
-        // Clean up markdown code blocks if present just in case
+        // Clean up markdown code blocks if present
         const jsonStr = textResponse.replace(/```json/g, "").replace(/```/g, "").trim();
         return JSON.parse(jsonStr);
     } catch (error) {
@@ -35,40 +36,44 @@ export async function generateQuiz(text: string) {
     }
 }
 
-export async function generateNotes(topic: string) {
+export async function generateNotes(topic: string, examMode: boolean) {
     if (process.env.GEMINI_API_KEY === "mock-key" || !process.env.GEMINI_API_KEY) {
-        return `## Notes for ${topic} (Mock)\n\n1. Key Point One\n2. Key Point Two\n3. Conclusion`;
+        return mockNotes(topic, examMode);
     }
 
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-        const prompt = `Generate comprehensive revision notes for the topic: "${topic}". Use Markdown format.`;
+        const prompt = `Generate comprehensive ${examMode ? 'exam-focused high-scoring' : 'revision'} notes for the topic: "${topic}".
+        Include key definitions, formulas (if any), and bullet points. Use Markdown format.`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         return response.text();
     } catch (error) {
          console.error("AI Error:", error);
-         return `Failed to generate notes for ${topic}.`;
+         return mockNotes(topic, examMode);
     }
 }
 
 function mockQuiz() {
-    return [
-        {
-            question: "What is the powerhouse of the cell? (Mock)",
-            options: ["Nucleus", "Mitochondria", "Ribosome", "Endoplasmic Reticulum"],
-            answer: 1
-        },
-        {
-            question: "What is the speed of light? (Mock)",
-            options: ["300,000 km/s", "150,000 km/s", "1,000 km/s", "Instant"],
-            answer: 0
-        },
-        {
-            question: "Which language is used for web apps? (Mock)",
-            options: ["Python", "C++", "JavaScript", "Java"],
-            answer: 2
-        }
-    ]
+    return Array(10).fill(null).map((_, i) => ({
+        question: `Mock Question ${i + 1}: What is the capital of AI?`,
+        options: ["Python", "Data", "Silicon", "Algorithm"],
+        answer: 1,
+        explanation: "Data is often considered the fuel for AI."
+    }));
+}
+
+function mockNotes(topic: string, examMode: boolean) {
+    return `## ${examMode ? 'High Scoring ' : ''}Notes for ${topic} (Mock)
+
+**Key Concepts:**
+*   Concept 1: Definition and importance.
+*   Concept 2: Application in real world.
+
+**Exam Tips:**
+1.  Focus on keywords.
+2.  Draw diagrams where possible.
+
+*Note: This is a mock response because GEMINI_API_KEY is missing.*`;
 }

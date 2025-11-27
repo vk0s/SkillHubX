@@ -10,19 +10,23 @@ export async function getSelf() {
   });
 
   if (!user) {
-     // Auto-create user if they don't exist in our DB but exist in Clerk
-     // This is a simple sync mechanism
      const clerkUser = await currentUser();
      if (!clerkUser) return null;
 
-     const newUser = await db.user.create({
-         data: {
-             clerkId: userId,
-             email: clerkUser.emailAddresses[0].emailAddress,
-             role: "USER"
-         }
-     });
-     return newUser;
+     // Atomically create user
+     try {
+         const newUser = await db.user.create({
+             data: {
+                 clerkId: userId,
+                 email: clerkUser.emailAddresses[0].emailAddress,
+                 role: "USER"
+             }
+         });
+         return newUser;
+     } catch (e) {
+         // Handle race condition if user created in parallel
+         return await db.user.findUnique({ where: { clerkId: userId } });
+     }
   }
 
   return user;

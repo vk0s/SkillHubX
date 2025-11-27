@@ -22,7 +22,11 @@ export default function RootLayout({
     <ClerkProvider
       appearance={{
         baseTheme: dark,
-        variables: { colorPrimary: "#06b6d4" },
+        variables: {
+            colorPrimary: "#06b6d4",
+            colorBackground: "#050505",
+            colorText: "white"
+        },
       }}
     >
       <html lang="en">
