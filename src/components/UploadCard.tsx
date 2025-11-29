@@ -2,7 +2,7 @@
 
 import { uploadContent } from "@/lib/actions";
 // @ts-ignore
-import { useFormStatus } from "react-dom";
+import { useFormStatus, useFormState } from "react-dom";
 import { useState } from "react";
 import { Upload } from "lucide-react";
 
@@ -19,11 +19,17 @@ function SubmitButton() {
     );
 }
 
+const initialState = {
+    message: "",
+};
+
 export function UploadCard() {
+    const [state, formAction] = useFormState(uploadContent, initialState);
+
     return (
         <div className="rounded-xl border bg-card text-card-foreground shadow glassmorphism p-6 max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold mb-4">Upload New Content</h2>
-            <form action={uploadContent} className="space-y-4">
+            <form action={formAction} className="space-y-4">
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Title</label>
                     <input name="title" required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
@@ -58,6 +64,11 @@ export function UploadCard() {
                 </div>
 
                 <SubmitButton />
+                {state?.message && (
+                    <p className={`text-sm text-center ${state.message.includes("Success") ? "text-green-500" : "text-red-500"}`}>
+                        {state.message}
+                    </p>
+                )}
             </form>
         </div>
     );
