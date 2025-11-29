@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
@@ -9,8 +9,8 @@ import { dark } from "@clerk/themes";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SkillHubX - Master Your Skills",
-  description: "AI-Powered Micro-Learning Platform",
+  title: "AI Study Platform",
+  description: "Next Gen Study Tool",
 };
 
 export default function RootLayout({
@@ -23,21 +23,22 @@ export default function RootLayout({
         appearance={{
             baseTheme: dark,
         }}
+        publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
         <html lang="en" suppressHydrationWarning>
-            <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground`}>
-                <ThemeProvider
-                    attribute="class"
-                    defaultTheme="system"
-                    enableSystem
-                    disableTransitionOnChange
-                >
-                    <Navbar />
-                    <main className="relative flex min-h-[calc(100vh-3.5rem)] flex-col">
-                        {children}
-                    </main>
-                </ThemeProvider>
-            </body>
+        <body className={inter.className}>
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="dark"
+                enableSystem
+                disableTransitionOnChange
+            >
+                <Navbar />
+                <main className="pt-16">
+                    {children}
+                </main>
+            </ThemeProvider>
+        </body>
         </html>
     </ClerkProvider>
   );

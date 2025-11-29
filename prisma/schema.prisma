@@ -10,69 +10,102 @@ datasource db {
 model User {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   clerkId       String        @unique
-  name          String?
   email         String
   role          Role          @default(USER)
   walletBalance Int           @default(0)
-  uploads       Content[]
-  quizzes       Quiz[]
-  transactions  Transaction[]
+  currentStreak Int           @default(0)
+
+  uploads       Upload[]
+  notes         Note[]
+  mockTests     MockTest[]
+  transactions  RewardTransaction[]
+  posts         CommunityPost[]
+  comments      Comment[]
+  likes         Like[]
 }
 
-model Content {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  type        ContentType
-  title       String
-  description String
-  url         String
-  price       Int      @default(0)
-  uploaderId  String   @db.ObjectId
-  uploader    User     @relation(fields: [uploaderId], references: [id])
-  status      Status   @default(PENDING)
-  createdAt   DateTime @default(now())
+model Upload {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @db.ObjectId
+  fileUrl       String
+  fileType      String
+  extractedText String?  @db.String
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes         Note[]
 }
 
-model Quiz {
-  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
-  ownerId            String   @db.ObjectId
-  owner              User     @relation(fields: [ownerId], references: [id])
-  inputType          InputType
-  generatedQuestions Json
-  generatedSummary   String
-  createdAt          DateTime @default(now())
+model Note {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String   @db.ObjectId
+  content             String   @db.String
+  topic               String
+  generatedFromUploadId String? @db.ObjectId
+  createdAt           DateTime @default(now())
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  upload              Upload?  @relation(fields: [generatedFromUploadId], references: [id])
 }
 
-model Transaction {
+model MockTest {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @db.ObjectId
+  topic          String
+  score          Int
+  totalQuestions Int
+  weakAreas      Json
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RewardTransaction {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String   @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id])
   amount    Int
+  reason    String
   type      TransactionType
-  message   String
   createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CommunityPost {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  content   String
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes     Like[]
+  comments  Comment[]
+}
+
+model Comment {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  createdAt DateTime      @default(now())
+  postId    String        @db.ObjectId
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String        @db.ObjectId
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String        @db.ObjectId
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String        @db.ObjectId
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
 }
 
 enum Role {
   USER
   ADMIN
   SUPERADMIN
-}
-
-enum ContentType {
-  VIDEO
-  PDF
-}
-
-enum Status {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum InputType {
-  PDF
-  IMAGE
-  TEXT
 }
 
 enum TransactionType {

@@ -1,69 +1,49 @@
-"use client";
-
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, PlayCircle, BookOpen, BrainCircuit } from "lucide-react";
+import { ArrowRight, BookOpen, BrainCircuit, Users, Trophy } from "lucide-react";
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <section className="flex-1 flex flex-col items-center justify-center py-24 text-center space-y-8 relative overflow-hidden">
-        {/* Background Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
+    <div className="flex flex-col min-h-screen bg-black text-white selection:bg-cyan-500 selection:text-white">
+      {/* Hero Section */}
+      <section className="relative flex flex-col items-center justify-center py-32 text-center overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/20 via-black to-black pointer-events-none" />
 
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="z-10"
-        >
-            <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter mb-4">
-                SkillHub<span className="text-primary neon-text">X</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-2xl mx-auto">
-                The Future of Micro-Learning.
-                <span className="block mt-2">Powered by AI. Secured by Design.</span>
-            </p>
-        </motion.div>
+        <div className="z-10 max-w-4xl px-4 space-y-8">
+          <h1 className="text-6xl md:text-8xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-600 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            Study Smarter with AI
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+            Upload PDFs, Generate Notes, Take AI Mock Tests, and Compete with Friends. All in one platform.
+          </p>
 
-        <motion.div
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             transition={{ delay: 0.4, duration: 0.8 }}
-             className="flex flex-wrap justify-center gap-6 mt-8 z-10"
-        >
-            <Link href="/dashboard" className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-md bg-primary px-8 font-medium text-primary-foreground shadow transition-all hover:bg-primary/90 hover:scale-105">
-                <span className="mr-2">Start Learning</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          <div className="flex flex-wrap justify-center gap-4 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
+            <Link href="/dashboard" className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-md bg-cyan-600 px-8 font-medium text-white transition-all duration-300 hover:bg-cyan-700 hover:scale-105 hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]">
+              <span className="mr-2">Get Started</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link href="/upload" className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
-                Upload Content
+            <Link href="/api/auth/signin" className="inline-flex h-12 items-center justify-center rounded-md border border-gray-800 bg-black/50 px-8 font-medium text-gray-300 transition-colors hover:bg-white/10 backdrop-blur-sm">
+              Sign In
             </Link>
-        </motion.div>
+          </div>
+        </div>
+      </section>
 
-        {/* Feature Cards */}
-        <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 max-w-6xl px-4 z-10"
-        >
-            <div className="glassmorphism p-8 rounded-xl text-left space-y-4">
-                <div className="p-3 bg-primary/10 w-fit rounded-lg"><PlayCircle className="w-8 h-8 text-primary" /></div>
-                <h3 className="text-xl font-bold">Secure Streaming</h3>
-                <p className="text-muted-foreground">DRM-style protection with dynamic watermarking to prevent piracy.</p>
-            </div>
-            <div className="glassmorphism p-8 rounded-xl text-left space-y-4">
-                <div className="p-3 bg-primary/10 w-fit rounded-lg"><BrainCircuit className="w-8 h-8 text-primary" /></div>
-                <h3 className="text-xl font-bold">AI Helper</h3>
-                <p className="text-muted-foreground">Generate quizzes, notes, and study plans instantly with Gemini AI.</p>
-            </div>
-            <div className="glassmorphism p-8 rounded-xl text-left space-y-4">
-                <div className="p-3 bg-primary/10 w-fit rounded-lg"><BookOpen className="w-8 h-8 text-primary" /></div>
-                <h3 className="text-xl font-bold">Micro-Learning</h3>
-                <p className="text-muted-foreground">Bite-sized video and PDF content for rapid skill acquisition.</p>
-            </div>
-        </motion.div>
+      {/* Features Grid */}
+      <section className="py-24 bg-black/50">
+        <div className="container px-4 mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+                { icon: BrainCircuit, title: "AI Helper", desc: "Instantly summarize texts and generate study plans." },
+                { icon: BookOpen, title: "Note Gen", desc: "Turn PDFs into structured, easy-to-read notes." },
+                { icon: Trophy, title: "Mock Tests", desc: "AI-generated quizzes to test your knowledge." },
+                { icon: Users, title: "Community", desc: "Share notes and compete on the leaderboard." },
+            ].map((f, i) => (
+                <div key={i} className="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md hover:border-cyan-500/50 transition-colors">
+                    <f.icon className="w-10 h-10 text-cyan-400 mb-4" />
+                    <h3 className="text-xl font-bold mb-2">{f.title}</h3>
+                    <p className="text-gray-400">{f.desc}</p>
+                </div>
+            ))}
+        </div>
       </section>
     </div>
   );
