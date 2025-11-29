@@ -1,45 +1,71 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { db } from "./db";
+import { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { db } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
-export async function getSelf() {
-  const { userId } = auth();
-  if (!userId) return null;
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(db),
+  session: {
+    strategy: "jwt",
+  },
+  pages: {
+    signIn: "/auth/signin",
+  },
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
 
-  const user = await db.user.findUnique({
-    where: { clerkId: userId },
-  });
+        const user = await db.user.findUnique({
+          where: { email: credentials.email },
+        });
 
-  if (!user) {
-     const clerkUser = await currentUser();
-     if (!clerkUser) return null;
+        if (!user || !user.password) {
+          return null;
+        }
 
-     // Atomically create user
-     try {
-         const newUser = await db.user.create({
-             data: {
-                 clerkId: userId,
-                 email: clerkUser.emailAddresses[0].emailAddress,
-                 role: "USER"
-             }
-         });
-         return newUser;
-     } catch (e) {
-         // Handle race condition if user created in parallel
-         return await db.user.findUnique({ where: { clerkId: userId } });
-     }
-  }
+        const isValid = await bcrypt.compare(credentials.password, user.password);
 
-  return user;
-}
+        if (!isValid) {
+          return null;
+        }
 
-export async function isAdmin() {
-    const user = await getSelf();
-    if (!user) return false;
-    return user.role === "ADMIN" || user.role === "SUPERADMIN";
-}
-
-export async function isSuperAdmin() {
-    const user = await getSelf();
-    if (!user) return false;
-    return user.role === "SUPERADMIN";
-}
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        };
+      },
+    }),
+  ],
+  callbacks: {
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+      }
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = (user as any).role;
+      }
+      return token;
+    },
+  },
+};

@@ -7,75 +7,147 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// NextAuth Models
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model User {
-  id            String        @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId       String        @unique
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
-  email         String
-  role          Role          @default(USER)
-  walletBalance Int           @default(0)
-  uploads       Content[]
-  quizzes       Quiz[]
-  transactions  Transaction[]
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String? // For Credentials Auth
+  role          Role      @default(USER)
+  points        Int       @default(0) // Replaced walletBalance
+
+  accounts      Account[]
+  sessions      Session[]
+
+  // App Relations
+  uploads       Upload[]
+  notes         Notes[]
+  mockResults   MockResult[]
+  rewards       Rewards[]
+  posts         CommunityPost[]
+  comments      Comment[]
+  likes         Like[]
 }
 
-model Content {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  type        ContentType
-  title       String
-  description String
-  url         String
-  price       Int      @default(0)
-  uploaderId  String   @db.ObjectId
-  uploader    User     @relation(fields: [uploaderId], references: [id])
-  status      Status   @default(PENDING)
-  createdAt   DateTime @default(now())
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
-model Quiz {
-  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
-  ownerId            String   @db.ObjectId
-  owner              User     @relation(fields: [ownerId], references: [id])
-  inputType          InputType
-  generatedQuestions Json
-  generatedSummary   String
-  createdAt          DateTime @default(now())
+// App Models
+
+model Upload {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  fileUrl       String
+  fileName      String
+  fileType      String   // PDF, IMAGE
+  extractedText String?  @db.String
+  createdAt     DateTime @default(now())
+  userId        String   @db.ObjectId
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Transaction {
+model Notes {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  subject          String
+  generatedContent String   @db.String
+  createdAt        DateTime @default(now())
+  userId           String   @db.ObjectId
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MockTest {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  subject       String
+  difficulty    String   // EASY, MEDIUM, HARD
+  questionsJson Json     // Array of MCQs
+  createdAt     DateTime @default(now())
+}
+
+model MockResult {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  score          Int
+  totalQuestions Int
+  wrongAnswers   Int
+  timeTaken      Int      // In seconds
+  createdAt      DateTime @default(now())
+  userId         String   @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Rewards {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id])
-  amount    Int
-  type      TransactionType
-  message   String
+  points    Int
+  reason    String   // "Daily Login", "Upload", etc.
   createdAt DateTime @default(now())
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CommunityPost {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  createdAt DateTime  @default(now())
+  authorId  String    @db.ObjectId
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes     Like[]
+  comments  Comment[]
+}
+
+model Comment {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  createdAt DateTime      @default(now())
+  postId    String        @db.ObjectId
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String        @db.ObjectId
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String        @db.ObjectId
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String        @db.ObjectId
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
 }
 
 enum Role {
   USER
   ADMIN
-  SUPERADMIN
-}
-
-enum ContentType {
-  VIDEO
-  PDF
-}
-
-enum Status {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum InputType {
-  PDF
-  IMAGE
-  TEXT
-}
-
-enum TransactionType {
-  EARN
-  SPEND
 }
