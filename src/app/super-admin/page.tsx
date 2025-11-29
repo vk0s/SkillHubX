@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { Sidebar } from "@/components/Sidebar";
-import { promoteToAdmin, demoteToUser } from "@/lib/actions";
-import { ShieldCheck, UserMinus, ScrollText, Settings } from "lucide-react";
+import { promoteToAdmin, demoteToUser, toggleSuspension } from "@/lib/actions";
+import { ShieldCheck, UserMinus, ScrollText, Settings, Ban, CheckCircle } from "lucide-react";
 import { protectSuperAdmin } from "@/lib/protect";
 import { getSelf } from "@/lib/auth";
 
@@ -39,6 +39,7 @@ export default async function SuperAdminPage() {
                                             <th className="h-12 px-4 text-left font-medium">Name</th>
                                             <th className="h-12 px-4 text-left font-medium">Email</th>
                                             <th className="h-12 px-4 text-left font-medium">Role</th>
+                                    <th className="h-12 px-4 text-left font-medium">Status</th>
                                             <th className="h-12 px-4 text-right font-medium">Actions</th>
                                         </tr>
                                     </thead>
@@ -51,6 +52,17 @@ export default async function SuperAdminPage() {
                                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${user.role === 'SUPERADMIN' ? 'bg-primary text-primary-foreground' : user.role === 'ADMIN' ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>
                                                         {user.role}
                                                     </span>
+                                        </td>
+                                        <td className="p-4">
+                                            {user.isSuspended ? (
+                                                <span className="text-red-500 font-bold text-xs flex items-center gap-1">
+                                                    <Ban className="w-3 h-3" /> Suspended
+                                                </span>
+                                            ) : (
+                                                <span className="text-green-500 font-bold text-xs flex items-center gap-1">
+                                                    <CheckCircle className="w-3 h-3" /> Active
+                                                </span>
+                                            )}
                                                 </td>
                                                 <td className="p-4 text-right">
                                                     {user.role !== 'SUPERADMIN' && (
@@ -73,6 +85,17 @@ export default async function SuperAdminPage() {
                                                                     <UserMinus className="h-4 w-4" />
                                                                 </button>
                                                             </form>
+                                                    <form action={async () => {
+                                                        "use server";
+                                                        await toggleSuspension(user.id);
+                                                    }}>
+                                                        <button
+                                                            title={user.isSuspended ? "Unsuspend User" : "Suspend User"}
+                                                            className={`h-8 w-8 rounded-full flex items-center justify-center hover:opacity-80 transition ${user.isSuspended ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}
+                                                        >
+                                                            {user.isSuspended ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+                                                        </button>
+                                                    </form>
                                                         </div>
                                                     )}
                                                 </td>

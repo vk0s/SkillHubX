@@ -1,5 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "./db";
+import { redirect } from "next/navigation";
 
 export async function getSelf() {
   const { userId } = auth();
@@ -27,6 +28,10 @@ export async function getSelf() {
          // Handle race condition if user created in parallel
          return await db.user.findUnique({ where: { clerkId: userId } });
      }
+  }
+
+  if (user && user.isSuspended) {
+      redirect("/suspended");
   }
 
   return user;
