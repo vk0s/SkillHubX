@@ -28,38 +28,44 @@ export async function syncUser() {
 }
 
 // Upload Content
-export async function uploadContent(formData: FormData) {
-  const { userId } = auth();
-  if (!userId) throw new Error("Unauthorized");
+export async function uploadContent(prevState: any, formData: FormData) {
+  try {
+    const { userId } = auth();
+    if (!userId) return { message: "Unauthorized" };
 
-  const title = formData.get("title") as string;
-  const description = formData.get("description") as string;
-  const type = formData.get("type") as "VIDEO" | "PDF";
-  const price = Number(formData.get("price"));
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const type = formData.get("type") as "VIDEO" | "PDF";
+    const price = Number(formData.get("price"));
 
-  // Mock file upload - in production use S3/Uploadthing
-  // We'll simulate a URL based on type
-  const mockUrl = type === "VIDEO"
-    ? "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-    : "https://pdfobject.com/pdf/sample.pdf";
+    // Mock file upload - in production use S3/Uploadthing
+    // We'll simulate a URL based on type
+    const mockUrl = type === "VIDEO"
+      ? "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      : "https://pdfobject.com/pdf/sample.pdf";
 
-  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
-  if (!dbUser) throw new Error("User not found");
+    const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+    if (!dbUser) return { message: "User not found" };
 
-  await db.content.create({
-    data: {
-      title,
-      description,
-      type,
-      price,
-      url: mockUrl,
-      uploaderId: dbUser.id,
-      status: "PENDING",
-    },
-  });
+    await db.content.create({
+      data: {
+        title,
+        description,
+        type,
+        price,
+        url: mockUrl,
+        uploaderId: dbUser.id,
+        status: "PENDING",
+      },
+    });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/upload");
+    revalidatePath("/dashboard");
+    revalidatePath("/upload");
+    return { message: "Success! Content uploaded for approval." };
+  } catch (error) {
+    console.error(error);
+    return { message: "Failed to upload content." };
+  }
 }
 
 // Admin Actions
